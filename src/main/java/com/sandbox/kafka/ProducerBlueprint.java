@@ -4,7 +4,6 @@ package com.sandbox.kafka;
 import java.util.Properties;
 
 public class ProducerBlueprint extends Blueprint {
-
     public String keySerializer = null;
     public String valueSerializer = null;
     public String bootstrapServers = null;
