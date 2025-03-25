@@ -4,22 +4,32 @@ package com.sandbox;
 import java.io.InputStream;
 import java.net.Socket;
 import java.util.Properties;
+import org.apache.spark.sql.SparkSession;
 import com.sandbox.kafka.Producer;
+import com.sandbox.spark.SparkToolbox;
 
 public class Main {
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_RESET = "\u001B[0m";
 
+    public static SparkSession sparkSession = null;
     public static Producer kafkaProducer = null;
 
     public static void main(String[] args) {
+        // setup spark
+        sparkSession = setupSparkSession(args);
+
+        // setup kafka
         kafkaProducer = setupKafkaProducer();
+
         shutdown();
     }
 
     public static void shutdown() {
         kafkaProducer.close();
+        sparkSession.stop();
+
         System.exit(0);
     }
 
@@ -45,6 +55,20 @@ public class Main {
         }
 
         return kafkaProducer;
+    }
+
+    public static SparkSession setupSparkSession(String[] args) {
+        SparkToolbox sparkToolbox = null;
+
+        try {
+            sparkToolbox = new SparkToolbox(args);
+
+        } catch (Exception e) {
+            System.out.println(ANSI_RED + e.getMessage() + ANSI_RESET);
+            System.exit(1);
+        }
+
+        return sparkToolbox.getSparkSession();
     }
 
     public static Properties loadCustomProperties(String fileName) throws Exception {
