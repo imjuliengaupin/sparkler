@@ -1,55 +1,73 @@
 
 package com.sandbox.spark;
 
+import java.util.Properties;
 import org.apache.spark.sql.SparkSession;
 
 public class SparkToolbox {
-    private final String appName = "Sparkler";
+    private Properties sparkProperties = null;
+    private String sparkAppName = null;
+    private String sparkMaster = null;
     private SparkSession sparkSession = null;
 
-    public SparkToolbox(String[] args) throws Exception {
-        String option = null;
-
-        if (args.length > 0) {
-            option = args[0];
-
-        } else {
-            throw new Exception("no option provided, must provide either: yarn, local");
-        }
-
-        this.sparkSession = this.openSparkSession(option);
+    public SparkToolbox(Properties sparkProperties) throws Exception {
+        this.sparkProperties = sparkProperties;
+        this.sparkAppName = this.sparkProperties.getProperty("spark.app.name");
+        this.sparkMaster = this.sparkProperties.getProperty("spark.master");
+        this.sparkSession = this.openSparkSession();
     }
 
     public SparkSession getSparkSession() {
         return this.sparkSession;
     }
 
-    public SparkSession openSparkSession(String option) throws Exception {
-        option = option.trim().toLowerCase();
-
-        switch (option) {
+    public SparkSession openSparkSession() throws Exception {
+        switch (this.sparkMaster) {
             case "yarn":
-                return this.sparkOnYarn(option);
+                return this.sparkOnYarn();
 
-            case "local":
-                return this.sparkOnLocal(option);
+            case "local[*]":
+                return this.sparkOnLocal();
 
             default:
-                throw new Exception("invalid option provided, available options are: yarn, local");
+                throw new Exception("invalid option provided, available options are: yarn, local[*]");
         }
     }
 
-    public SparkSession sparkOnLocal(String option) throws Exception {
-        this.sparkSession = SparkSession
+    public SparkSession sparkOnLocal() throws Exception {
+        SparkSession.Builder builder = SparkSession
                 .builder()
-                .appName(this.appName)
-                .master(option)
+                .appName(this.sparkAppName)
+                .master(this.sparkMaster);
+
+        // apply /src/main/resources/spark/spark.properties to the builder
+        for (String key : this.sparkProperties.stringPropertyNames()) {
+            String value = this.sparkProperties.getProperty(key);
+            builder.config(key, value);
+        }
+
+        this.sparkSession = builder
                 .getOrCreate();
 
         return this.sparkSession;
     }
 
-    public SparkSession sparkOnYarn(String option) throws Exception {
-        return null;
+    public SparkSession sparkOnYarn() throws Exception {
+        SparkSession.Builder builder = SparkSession
+                .builder()
+                .appName(this.sparkAppName)
+                .master(this.sparkMaster);
+
+        // apply /src/main/resources/spark/spark.properties to the builder
+        for (String key : this.sparkProperties.stringPropertyNames()) {
+            String value = this.sparkProperties.getProperty(key);
+            builder.config(key, value);
+        }
+
+        this.sparkSession = builder
+                .enableHiveSupport()
+                .getOrCreate();
+
+        return this.sparkSession;
     }
 }

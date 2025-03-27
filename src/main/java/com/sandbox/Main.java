@@ -18,7 +18,7 @@ public class Main {
 
     public static void main(String[] args) {
         // setup spark
-        sparkSession = setupSparkSession(args);
+        sparkSession = setupSparkSession();
 
         // setup kafka
         kafkaProducer = setupKafkaProducer();
@@ -47,6 +47,7 @@ public class Main {
             // check if server is reachable
             if (isPortOpen(host, Integer.parseInt(port))) {
                 kafkaProducer = new Producer(kafkaProducerProperties);
+                System.out.println("Kafka Producer: " + ANSI_GREEN + "ACTIVE" + ANSI_RESET);
             }
 
         } catch (Exception e) {
@@ -57,11 +58,25 @@ public class Main {
         return kafkaProducer;
     }
 
-    public static SparkSession setupSparkSession(String[] args) {
+    public static SparkSession setupSparkSession() {
         SparkToolbox sparkToolbox = null;
 
         try {
-            sparkToolbox = new SparkToolbox(args);
+            // load custom spark properties
+            Properties sparkProperties = loadCustomProperties("spark.properties");
+
+            // create a spark session
+            sparkToolbox = new SparkToolbox(sparkProperties);
+
+            // BUG exception in connection from /0.0.0.0:0
+            // extract host and port dynamically from the spark session
+            String host = sparkToolbox.getSparkSession().sparkContext().getConf().get("spark.driver.host", "127.0.0.1");
+            String port = sparkToolbox.getSparkSession().sparkContext().getConf().get("spark.driver.port", "7077");
+
+            // check if server is reachable
+            if (isPortOpen(host, Integer.parseInt(port))) {
+                System.out.println("Spark Session: " + ANSI_GREEN + "ACTIVE" + ANSI_RESET);
+            }
 
         } catch (Exception e) {
             System.out.println(ANSI_RED + e.getMessage() + ANSI_RESET);
@@ -95,7 +110,7 @@ public class Main {
 
         } catch (Exception e) {
             throw new Exception(
-                    "unable to connect to " + host + ":" + port + ", please check if the kafka server is running");
+                    "unable to connect to " + host + ":" + port);
         }
     }
 }

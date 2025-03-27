@@ -2,6 +2,7 @@
 package com.sandbox.kafka;
 
 import java.util.Properties;
+import com.sandbox.Blueprint;
 
 public class ProducerBlueprint extends Blueprint {
     public String keySerializer = null;

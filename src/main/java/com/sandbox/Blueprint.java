@@ -1,5 +1,5 @@
 
-package com.sandbox.kafka;
+package com.sandbox;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -11,10 +11,10 @@ public class Blueprint {
         // empty default constructor
     }
 
-    public Map<String, String> getBlueprintMapping() throws Exception {
+    public Map<String, String> reflectBlueprint() throws Exception {
         // use reflection to map class fields to their associated values being assigned
         // in the class constructor
-        Map<String, String> blueprintMapping = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<String, String>();
 
         for (Field classField : this.getClass().getDeclaredFields()) {
             // reflected object should supress java language access checking when it is used
@@ -24,13 +24,13 @@ public class Blueprint {
             String value = classField.get(this).toString();
 
             // append the field name and its value to the map
-            blueprintMapping.put(key, value);
+            map.put(key, value);
         }
 
-        if (blueprintMapping.isEmpty()) {
+        if (map.isEmpty()) {
             throw new Exception("properties not found in /src/main/resources");
         }
 
-        return blueprintMapping;
+        return map;
     }
 }

@@ -29,6 +29,10 @@
                 <directory>src/main/resources/kafka</directory>
                 <filtering>true</filtering>
             </resource>
+            <resource>
+                <directory>src/main/resources/spark</directory>
+                <filtering>true</filtering>
+            </resource>
         </resources>
     </build>
 
