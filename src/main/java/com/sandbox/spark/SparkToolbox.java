@@ -1,19 +1,21 @@
 
 package com.sandbox.spark;
 
+import java.util.Map;
 import java.util.Properties;
 import org.apache.spark.sql.SparkSession;
+import com.sandbox.Blueprint;
 
 public class SparkToolbox {
-    private Properties sparkProperties = null;
-    private String sparkAppName = null;
-    private String sparkMaster = null;
-    private SparkSession sparkSession = null;
+    public Blueprint blueprint = null;
+    public Map<String, String> blueprintMapping = null;
+    public Properties sparkProperties = null;
+    public SparkSession sparkSession = null;
 
-    public SparkToolbox(Properties sparkProperties) throws Exception {
-        this.sparkProperties = sparkProperties;
-        this.sparkAppName = this.sparkProperties.getProperty("spark.app.name");
-        this.sparkMaster = this.sparkProperties.getProperty("spark.master");
+    public SparkToolbox(Properties properties) throws Exception {
+        this.sparkProperties = properties;
+        this.blueprint = new SparkBlueprint(this.sparkProperties);
+        this.blueprintMapping = this.blueprint.reflectBlueprint();
         this.sparkSession = this.openSparkSession();
     }
 
@@ -22,13 +24,11 @@ public class SparkToolbox {
     }
 
     public SparkSession openSparkSession() throws Exception {
-        switch (this.sparkMaster) {
+        switch (this.blueprintMapping.get("sparkMaster")) {
             case "yarn":
                 return this.sparkOnYarn();
-
             case "local[*]":
                 return this.sparkOnLocal();
-
             default:
                 throw new Exception("invalid option provided, available options are: yarn, local[*]");
         }
@@ -37,8 +37,8 @@ public class SparkToolbox {
     public SparkSession sparkOnLocal() throws Exception {
         SparkSession.Builder builder = SparkSession
                 .builder()
-                .appName(this.sparkAppName)
-                .master(this.sparkMaster);
+                .appName(this.blueprintMapping.get("sparkAppName"))
+                .master(this.blueprintMapping.get("sparkMaster"));
 
         // apply /src/main/resources/spark/spark.properties to the builder
         for (String key : this.sparkProperties.stringPropertyNames()) {
@@ -55,8 +55,8 @@ public class SparkToolbox {
     public SparkSession sparkOnYarn() throws Exception {
         SparkSession.Builder builder = SparkSession
                 .builder()
-                .appName(this.sparkAppName)
-                .master(this.sparkMaster);
+                .appName(this.blueprintMapping.get("sparkAppName"))
+                .master(this.blueprintMapping.get("sparkMaster"));
 
         // apply /src/main/resources/spark/spark.properties to the builder
         for (String key : this.sparkProperties.stringPropertyNames()) {

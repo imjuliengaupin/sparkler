@@ -4,7 +4,6 @@ package com.sandbox.kafka;
 import java.util.Map;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
-
 import com.sandbox.Blueprint;
 
 public class Producer extends KafkaProducer<String, String> {
@@ -15,15 +14,8 @@ public class Producer extends KafkaProducer<String, String> {
         // must explicitly invoke the super constructor in KafkaProducer class
         super(properties);
 
-        // initialize custom blueprint
         this.blueprint = new ProducerBlueprint(properties);
-
-        try {
-            this.blueprintMapping = this.blueprint.reflectBlueprint();
-
-        } catch (Exception e) {
-            throw new Exception(e);
-        }
+        this.blueprintMapping = this.blueprint.reflectBlueprint();
     }
 
     public Map<String, String> getProducerBlueprint() {
