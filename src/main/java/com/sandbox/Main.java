@@ -23,6 +23,9 @@ public class Main {
         // setup kafka
         kafkaProducer = setupKafkaProducer();
 
+        System.out.println("STATUS: " + ANSI_GREEN + "SPARK ACTIVE" + ANSI_RESET);
+        System.out.println("STATUS: " + ANSI_GREEN + "KAFKA ACTIVE" + ANSI_RESET);
+
         shutdown();
     }
 
@@ -47,7 +50,6 @@ public class Main {
             // check if server is reachable
             if (isPortOpen(host, Integer.parseInt(port))) {
                 kafkaProducer = new Producer(kafkaProducerProperties);
-                System.out.println("Kafka Producer: " + ANSI_GREEN + "ACTIVE" + ANSI_RESET);
             }
 
         } catch (Exception e) {
@@ -68,15 +70,23 @@ public class Main {
             // create a spark session
             sparkToolbox = new SparkToolbox(sparkProperties);
 
-            // BUG exception in connection from /0.0.0.0:0
             // extract host and port dynamically from the spark session
-            String host = sparkToolbox.getSparkSession().sparkContext().getConf().get("spark.driver.host", "127.0.0.1");
-            String port = sparkToolbox.getSparkSession().sparkContext().getConf().get("spark.driver.port", "7077");
+            String host = "";
+            String port = "";
+
+            if (sparkToolbox.blueprintMapping.get("sparkMaster").equals("local[*]")) {
+                // localhost set as default value to avoid dynamic binding issues
+                host = sparkToolbox.getSparkSession().sparkContext().getConf().get("spark.driver.host", "localhost");
+                port = sparkToolbox.getSparkSession().sparkContext().getConf().get("spark.driver.port");
+
+            } else {
+                // TODO implement for yarn
+                throw new Exception();
+            }
 
             // check if server is reachable
-            if (isPortOpen(host, Integer.parseInt(port))) {
-                System.out.println("Spark Session: " + ANSI_GREEN + "ACTIVE" + ANSI_RESET);
-            }
+            if (isPortOpen(host, Integer.parseInt(port)))
+                ;
 
         } catch (Exception e) {
             System.out.println(ANSI_RED + e.getMessage() + ANSI_RESET);
@@ -109,8 +119,7 @@ public class Main {
             return true;
 
         } catch (Exception e) {
-            throw new Exception(
-                    "unable to connect to " + host + ":" + port);
+            throw new Exception(ANSI_RESET + "STATUS: " + ANSI_RED + "CONNECTION TO " + host + ":" + port + " FAILED");
         }
     }
 }
