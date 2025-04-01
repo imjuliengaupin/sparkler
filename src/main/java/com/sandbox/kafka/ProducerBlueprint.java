@@ -33,5 +33,7 @@ public class ProducerBlueprint extends Blueprint {
         this.requestTimeoutMs = properties.getProperty("request.timeout.ms");
         this.enableIdempotence = properties.getProperty("enable.idempotence");
         this.partitionerClass = properties.getProperty("partitioner.class");
+
+        validateBlueprint(this.getClass(), properties);
     }
 }

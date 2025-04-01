@@ -7,15 +7,17 @@ import org.apache.spark.sql.SparkSession;
 import com.sandbox.Blueprint;
 
 public class SparkToolbox {
-    public Blueprint blueprint = null;
-    public Map<String, String> blueprintMapping = null;
+    public Blueprint sparkBlueprint = null;
+    public Map<String, String> blueprint = null;
     public Properties sparkProperties = null;
     public SparkSession sparkSession = null;
 
     public SparkToolbox(Properties properties) throws Exception {
         this.sparkProperties = properties;
-        this.blueprint = new SparkBlueprint(this.sparkProperties);
-        this.blueprintMapping = this.blueprint.reflectBlueprint();
+
+        this.sparkBlueprint = new SparkBlueprint(this.sparkProperties);
+        this.blueprint = this.sparkBlueprint.reflectBlueprint();
+
         this.sparkSession = this.openSparkSession();
     }
 
@@ -24,7 +26,7 @@ public class SparkToolbox {
     }
 
     public SparkSession openSparkSession() throws Exception {
-        switch (this.blueprintMapping.get("sparkMaster")) {
+        switch (this.blueprint.get("sparkMaster")) {
             case "yarn":
                 return this.sparkOnYarn();
             case "local[*]":
@@ -37,8 +39,8 @@ public class SparkToolbox {
     public SparkSession sparkOnLocal() throws Exception {
         SparkSession.Builder builder = SparkSession
                 .builder()
-                .appName(this.blueprintMapping.get("sparkAppName"))
-                .master(this.blueprintMapping.get("sparkMaster"));
+                .appName(this.blueprint.get("sparkAppName"))
+                .master(this.blueprint.get("sparkMaster"));
 
         // apply /src/main/resources/spark/spark.properties to the builder
         for (String key : this.sparkProperties.stringPropertyNames()) {
@@ -55,8 +57,8 @@ public class SparkToolbox {
     public SparkSession sparkOnYarn() throws Exception {
         SparkSession.Builder builder = SparkSession
                 .builder()
-                .appName(this.blueprintMapping.get("sparkAppName"))
-                .master(this.blueprintMapping.get("sparkMaster"));
+                .appName(this.blueprint.get("sparkAppName"))
+                .master(this.blueprint.get("sparkMaster"));
 
         // apply /src/main/resources/spark/spark.properties to the builder
         for (String key : this.sparkProperties.stringPropertyNames()) {

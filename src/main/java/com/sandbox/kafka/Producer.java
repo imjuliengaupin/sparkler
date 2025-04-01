@@ -7,18 +7,21 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import com.sandbox.Blueprint;
 
 public class Producer extends KafkaProducer<String, String> {
-    public Blueprint blueprint = null;
-    public Map<String, String> blueprintMapping = null;
+    public Blueprint producerBlueprint = null;
+    public Map<String, String> blueprint = null;
+    public Properties producerProperties = null;
 
     public Producer(Properties properties) throws Exception {
         // must explicitly invoke the super constructor in KafkaProducer class
         super(properties);
 
-        this.blueprint = new ProducerBlueprint(properties);
-        this.blueprintMapping = this.blueprint.reflectBlueprint();
+        this.producerProperties = properties;
+
+        this.producerBlueprint = new ProducerBlueprint(this.producerProperties);
+        this.blueprint = this.producerBlueprint.reflectBlueprint();
     }
 
     public Map<String, String> getProducerBlueprint() {
-        return this.blueprintMapping;
+        return this.blueprint;
     }
 }

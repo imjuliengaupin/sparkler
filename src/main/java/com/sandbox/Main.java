@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.util.Properties;
 import org.apache.spark.sql.SparkSession;
+import com.sandbox.kafka.Message;
 import com.sandbox.kafka.Producer;
 import com.sandbox.spark.SparkToolbox;
 
@@ -15,6 +16,7 @@ public class Main {
 
     public static SparkSession sparkSession = null;
     public static Producer kafkaProducer = null;
+    public static Message kafkaMessage = null;
 
     public static void main(String[] args) {
         // setup spark
@@ -22,9 +24,13 @@ public class Main {
 
         // setup kafka
         kafkaProducer = setupKafkaProducer();
+        kafkaMessage = setupKafkaMessage();
 
         System.out.println("STATUS: " + ANSI_GREEN + "SPARK ACTIVE" + ANSI_RESET);
         System.out.println("STATUS: " + ANSI_GREEN + "KAFKA ACTIVE" + ANSI_RESET);
+
+        // write message to kafka topic
+        kafkaMessage.writeMessage(sparkSession, kafkaProducer.blueprint, kafkaMessage);
 
         shutdown();
     }
@@ -60,6 +66,23 @@ public class Main {
         return kafkaProducer;
     }
 
+    public static Message setupKafkaMessage() {
+        Message kafkaMessage = null;
+
+        try {
+            kafkaMessage = new Message(sparkSession);
+
+            // TODO add more set methods for different configs
+            kafkaMessage.setMessage("Hello, World!");
+
+        } catch (Exception e) {
+            System.out.println(ANSI_RED + e.getMessage() + ANSI_RESET);
+            System.exit(1);
+        }
+
+        return kafkaMessage;
+    }
+
     public static SparkSession setupSparkSession() {
         SparkToolbox sparkToolbox = null;
 
@@ -74,7 +97,7 @@ public class Main {
             String host = "";
             String port = "";
 
-            if (sparkToolbox.blueprintMapping.get("sparkMaster").equals("local[*]")) {
+            if (sparkToolbox.blueprint.get("sparkMaster").equals("local[*]")) {
                 // localhost set as default value to avoid dynamic binding issues
                 host = sparkToolbox.getSparkSession().sparkContext().getConf().get("spark.driver.host", "localhost");
                 port = sparkToolbox.getSparkSession().sparkContext().getConf().get("spark.driver.port");
